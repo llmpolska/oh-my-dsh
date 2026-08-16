@@ -174,3 +174,40 @@ test('inherit policy on children falls through to mode/plan', () => {
 test('off mode yields no decision', () => {
   assert.equal(resolveTierSpec({ mode: 'off' }), null)
 })
+
+// ---- image-response parsing -----------------------------------------------
+
+import { collectImageCandidates, collectSvgCandidates } from '../lib/pure.js'
+
+test('collects data-url and b64_json image candidates', () => {
+  const out = []
+  collectImageCandidates({ choices: [{ message: { content: [
+    { type: 'text', text: 'here is a data:image/png;base64,AAAA image' },
+    { type: 'image_url', image_url: { url: 'data:image/png;base64,BBBB' } },
+    { type: 'image_url', image_url: { url: 'https://cdn.example/a.png?x=1' } },
+  ] } }], b64_json: 'C'.repeat(80) }, out)
+  assert.ok(out.some((c) => c.kind === 'b64' && c.data.includes('AAAA')))
+  assert.ok(out.some((c) => c.kind === 'data' && c.data.includes('BBBB')))
+  assert.ok(out.some((c) => c.kind === 'url' && c.url.includes('a.png')))
+  assert.ok(out.some((c) => c.kind === 'b64' && c.data === 'C'.repeat(80)))
+})
+
+test('collects svg blocks from response text (fenced and plain)', () => {
+  const out = []
+  collectSvgCandidates({
+    choices: [{ message: { content: [
+      { type: 'text', text: 'Sure:\n```svg\n<svg width="1" height="1"><rect fill="red"/></svg>\n```' },
+      { type: 'text', text: 'plain <svg viewBox="0 0 2 2"><circle/></svg> end' },
+    ] } }],
+  }, out)
+  assert.equal(out.length, 2)
+  assert.ok(out.every((c) => c.kind === 'svg'))
+  assert.ok(out[0].data.includes('<svg') && out[0].data.includes('rect'))
+  assert.ok(out[1].data.includes('<circle'))
+})
+
+test('svg collector ignores non-svg text', () => {
+  const out = []
+  collectSvgCandidates({ output: [{ type: 'message', content: [{ type: 'output_text', text: 'no markup here' }] }] }, out)
+  assert.equal(out.length, 0)
+})

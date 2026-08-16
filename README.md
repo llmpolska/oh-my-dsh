@@ -12,9 +12,11 @@ DSH Desktop settings**. Works in the Web/Desktop surface **and** in the terminal
   image-capable model (default: the first vision model your provider offers, e.g.
   `minimax-m3` on opencode-go). The session returns to its tier on the next text message.
 - **image generation**: `omd_image` tool and `/omd image <prompt>` generate images with a
-  configured image-capable model. Works with the classic `images/generations` endpoint,
-  and with chat models that emit images (e.g. a luna-style GPT) via chat completions with
-  image output modalities.
+  configured model — pick a registered provider (e.g. `opencode-go`) and a model id
+  (e.g. `gpt-5.6-luna`). The plugin reuses the provider's own route and API key and
+  calls the model like an ordinary chat model that can emit images (chat completions
+  with image output modalities → Responses API → classic images/generations fallback).
+  Generated images are saved under `./oh-my-dsh-images/`.
 - **high-impact guard**: while the build tier executes, `rm -rf`, `sudo`, force pushes,
   credential/secret file edits, etc. are denied until the session escalates to think.
 - **failure auto-escalation**: repeated step errors temporarily escalate to think.
@@ -54,9 +56,10 @@ Open DSH Desktop → ⚙ Settings → **oh my dsh**:
 - **Think tier**: provider + model + reasoning effort.
 - **Build tier**: provider + model + reasoning effort.
 - **Vision tier**: picker limited to image-capable models, automatic-routing toggle.
-- **Image generation**: provider label, base URL, image model (e.g. a luna-style GPT id),
-  API key env var (or an inline key), size, output directory, and the
-  "chat completions with image modalities" fallback toggle.
+- **Image generation**: provider picker (registered providers — the plugin derives the
+  base URL and reuses the provider's API key) + model id (e.g. `gpt-5.6-luna`), size,
+  output directory, and the "image output modalities" toggle. The "custom endpoint"
+  option is the manual fallback (base URL + API key env var/inline key).
 
 ## Slash command
 
