@@ -1,0 +1,18 @@
+# oh-my-dsh — bundle patch for the profile layer.
+#
+# `dsh plugin add oh-my-dsh` appends this package to the profile's bundle
+# layer list, and the loader applies this patch: one insert row that mounts
+# the host half (`oh-my-dsh`) on the host plane.
+#
+# The host half adapts to the surface it boots on:
+#   - Web (Desktop): registers the `oh-my-dsh` settings namespace, serves the
+#     /omd configuration endpoint the settings tab uses, and pre-admits image
+#     prompts to the configured vision model. Agent-plane features activate
+#     through the shipped `oh-my-dsh` agent preset (installed automatically
+#     into $DSH_HOME/.agent-presets and set as the default preset).
+#   - TUI / headless (no agent-presets service): the same row activates the
+#     agent-plane features process-wide, because these surfaces compose their
+#     agent in the root realm.
+- insert:
+    - id: oh-my-dsh
+      name: oh-my-dsh
