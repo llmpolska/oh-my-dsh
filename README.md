@@ -31,30 +31,27 @@ and the terminal (`dsh --profile tui`).
 
 ## Installation (easy)
 
-Requirements: DeepSeek Harness Desktop (or the `dsh` CLI) with pnpm available, and a
-profile to install into.
+Requirements: DeepSeek Harness Desktop (or the `dsh` CLI) and an internet connection —
+the `dsh plugin` command manages pnpm itself, nothing else to install.
 
-### 1. Build the package (from this checkout)
+### Quickstart — install straight from the GitHub repo (no local download)
 
-```sh
-cd oh-my-dsh
-pnpm pack          # produces oh-my-dsh-0.1.0.tgz
-```
-
-### 2. Install into a profile
-
-Install the tarball into **every surface you use** (each profile is independent):
+Install into **every surface you use** (each profile is independent):
 
 ```sh
 # DSH Desktop app (the profile the desktop app boots — the settings tab lives here)
-dsh plugin --profile desktop add ./oh-my-dsh-0.1.0.tgz
+dsh plugin --profile desktop add github:llmpolska/oh-my-dsh#v0.1.0
 
 # Standalone web app (dsh web / --profile web)
-dsh plugin --profile web add ./oh-my-dsh-0.1.0.tgz
+dsh plugin --profile web add github:llmpolska/oh-my-dsh#v0.1.0
 
 # Terminal (TUI)
-dsh plugin --profile tui add ./oh-my-dsh-0.1.0.tgz
+dsh plugin --profile tui add github:llmpolska/oh-my-dsh#v0.1.0
 ```
+
+The `#v0.1.0` suffix pins the exact release tag. The package has **no build step**
+(no `prepare` script), so pnpm installs it directly — no `allowBuilds` configuration
+is needed. The command also activates the plugin as a profile layer automatically.
 
 ### 3. Restart
 
@@ -75,6 +72,19 @@ On boot the plugin:
 
 > **New sessions** get the preset (existing sessions keep theirs — create a new session
 > to get `/omd` and the `omd_*` tools).
+
+### Alternative: install from a local tarball (offline / development)
+
+```sh
+cd oh-my-dsh
+pnpm pack                        # produces oh-my-dsh-0.1.0.tgz
+dsh plugin --profile desktop add ./oh-my-dsh-0.1.0.tgz
+dsh plugin --profile web add ./oh-my-dsh-0.1.0.tgz
+dsh plugin --profile tui add ./oh-my-dsh-0.1.0.tgz
+```
+
+A local path install (`dsh plugin add /path/to/oh-my-dsh`) links the checkout as-is —
+after changing `lib/`, just restart the app.
 
 ### Which surface does what
 
