@@ -1,33 +1,45 @@
 # oh-my-dsh
 
-Tiered model routing for DeepSeek Harness: think/build tiers, an omp-style vision
-delegation layer (the vision model **only describes** images — the working model does
-the work), and image generation through an ordinary chat model — all configured from
-an **"oh my dsh" tab in the settings**.
+**Tiered model routing plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)** — split every session into **think** and **build** model tiers, delegate image understanding to a **vision model** (it only describes — your coding model does the work), and generate **images** from an ordinary chat model. Configured from a settings tab, no YAML editing.
+
+[![License: MIT](https://img.shields.io/github/license/llmpolska/oh-my-dsh)](https://github.com/llmpolska/oh-my-dsh/blob/main/LICENSE)
+[![Release](https://img.shields.io/github/v/release/llmpolska/oh-my-dsh)](https://github.com/llmpolska/oh-my-dsh/releases)
+[![Stars](https://img.shields.io/github/stars/llmpolska/oh-my-dsh)](https://github.com/llmpolska/oh-my-dsh/stargazers)
 
 Works on **every DSH surface**: DSH Desktop, the standalone web profile (`dsh web`),
 and the terminal (`dsh --profile tui`).
 
-## What you get
+## Why oh-my-dsh?
 
-- **think tier** (planning, architecture, hard debugging, reviews) and **build tier**
-  (day-to-day implementation) — `auto` mode runs plan mode on think and execution on build.
-- **vision tier** (omp-style delegation): when a message contains an image, the vision
-  model describes it **in the background** and the working tier (think/build) answers
-  from that description — so *"build a frontend like this image"* is built by your
-  coding model, not by the vision model. The image stays in the chat; image parts are
-  substituted with the description in text-only model requests, so later turns never
-  fail with unsupported content. The session model never switches for an image.
-- **image generation**: the `omd_image` tool and `/omd image <prompt>` generate images
-  with a configured model (e.g. `gpt-5.6-luna` on opencode-go, or `gpt-image-2` via
-  Codex), saved under `./oh-my-dsh-images/`.
-- **high-impact guard**: while the build tier executes, `rm -rf`, `sudo`, force pushes,
-  credential/secret file edits, etc. are denied until the session escalates to think.
-- **failure auto-escalation**: repeated step errors temporarily escalate to the think tier.
-- **advisor / review**: `omd_advisor` and `omd_review` consult the think tier on demand.
-- **subagent tiering**: `omd_worker` dispatches bounded task packets to a chosen tier.
-- **system prompt section**: every session on the oh-my-dsh preset gets a prompt section
-  describing the tiers, the `/omd` command mapping, and the routing rules.
+Running every step of a coding session on a frontier model is expensive and slow.
+oh-my-dsh gives the agent **tiers**: a strong (think) model for planning, architecture
+and hard debugging, a cheaper (build) model for day-to-day implementation, an
+automatic **vision delegation** layer for images (the vision model describes, the
+working model acts), and an image-generation path — all without switching sessions
+manually and without YAML configuration.
+
+## Features
+
+- **Think / Build tiers** — plan mode runs on the strong model, execution on the
+  cheap one (`auto` mode; per-session override with `/omd strong|cheap`).
+- **Vision delegation (omp-style)** — paste a screenshot of a website and say
+  *"build this frontend"*: the vision model describes it **in the background** and
+  the working tier answers from that description. The image stays in the chat, the
+  session model never switches, and later turns never fail with unsupported content.
+- **Image generation** — `omd_image` tool and `/omd image <prompt>` generate images
+  with a configured chat model (e.g. `gpt-5.6-luna` on opencode-go, `gpt-image-2`
+  via Codex), saved under `./oh-my-dsh-images/`.
+- **High-impact guard** — `rm -rf`, `sudo`, force pushes and credential/secret file
+  edits are denied while the build tier executes until the session escalates to think.
+- **Failure auto-escalation** — repeated model-step errors temporarily escalate to
+  the think tier.
+- **Advisor / Reviewer** — `omd_advisor` and `omd_review` consult the think tier on
+  demand, before risky decisions and high-risk merges.
+- **Subagent tiering** — `omd_worker` dispatches bounded task packets to a chosen tier.
+- **System prompt section** — every session gets a prompt section describing the
+  tiers, the `/omd` command mapping and the routing rules.
+- **Settings tab** — providers, models, reasoning efforts, guard and escalation
+  tuning from the "oh my dsh" tab in DSH Desktop settings.
 
 ## Installation (easy)
 
@@ -53,7 +65,7 @@ The `#v0.1.0` suffix pins the exact release tag. The package has **no build step
 (no `prepare` script), so pnpm installs it directly — no `allowBuilds` configuration
 is needed. The command also activates the plugin as a profile layer automatically.
 
-### 3. Restart
+### Restart
 
 **Fully restart DSH Desktop** (Cmd+Q → relaunch) or restart the `dsh` process. The
 plugin's host half loads at profile boot — a window refresh is not enough.
@@ -86,7 +98,7 @@ dsh plugin --profile tui add ./oh-my-dsh-0.1.0.tgz
 A local path install (`dsh plugin add /path/to/oh-my-dsh`) links the checkout as-is —
 after changing `lib/`, just restart the app.
 
-### Which surface does what
+## Which surface does what
 
 | Surface | Settings tab | `/omd` + `omd_*` tools | Vision describe | Image generation |
 |---|---|---|---|---|
@@ -99,20 +111,9 @@ half (endpoint, vision wrapper) mounts where a web server exists, and the agent 
 (roles, tools, guard, scrub) activates through the preset on web surfaces or
 process-wide in the TUI, where no preset roster exists.
 
-## The settings tab
+## Usage
 
-Open DSH Desktop → ⚙ Settings → **oh my dsh**:
-
-- **Routing**: mode (auto/strong/cheap/off), subagent policy, escalation tuning, guard toggle.
-- **Think tier**: provider + model + reasoning effort.
-- **Build tier**: provider + model + reasoning effort.
-- **Vision tier**: picker limited to image-capable models, auto-describe toggle.
-- **Image generation**: provider picker (registered providers — the plugin derives the
-  base URL and reuses the provider's API key) + model id (e.g. `gpt-5.6-luna`), size,
-  output directory, and the "image output modalities" toggle. The "custom endpoint"
-  option is the manual fallback (base URL + API key env var/inline key).
-
-## Slash commands
+### Slash commands
 
 ```
 /omd status
@@ -129,7 +130,7 @@ Open DSH Desktop → ⚙ Settings → **oh my dsh**:
 The automatic vision description (visionAuto) is toggled in the settings tab; the
 describing model is set with `/omd set vision <provider> <model>`.
 
-## Tools
+### Tools
 
 `omd_status`, `omd_route`, `omd_configure`, `omd_advisor`, `omd_review`, `omd_worker`,
 `omd_image`.
@@ -143,6 +144,27 @@ describing model is set with `/omd set vision <provider> <model>`.
    description, then answers from it — the vision model never runs a turn.
 4. Later turns: the image part in history is replaced by the description for text-only
    models, so nothing ever fails with unsupported content.
+
+## The settings tab
+
+Open DSH Desktop → ⚙ Settings → **oh my dsh**:
+
+- **Routing**: mode (auto/strong/cheap/off), subagent policy, escalation tuning, guard toggle.
+- **Think tier**: provider + model + reasoning effort.
+- **Build tier**: provider + model + reasoning effort.
+- **Vision tier**: picker limited to image-capable models, auto-describe toggle.
+- **Image generation**: provider picker (registered providers — the plugin derives the
+  base URL and reuses the provider's API key) + model id (e.g. `gpt-5.6-luna`), size,
+  output directory, and the "image output modalities" toggle. The "custom endpoint"
+  option is the manual fallback (base URL + API key env var/inline key).
+
+## For developers
+
+- `lib/index.js` — host half: `/omd` endpoint, vision describe wrapper, preset install.
+- `lib/agent.js` — agent plane: tier routing, guard, escalation, `omd_*` tools,
+  prompt section, `llm.streamWithRegistration` history scrub.
+- `lib/client.js` — the "oh my dsh" settings tab (plain JS, served by the shell).
+- `lib/config.js` — settings schema and shared state (incl. the vision description store).
 
 ## Tests
 
@@ -161,6 +183,16 @@ dsh plugin --profile tui remove oh-my-dsh
 # in $DSH_HOME/settings.yaml, then set the agent-presets default back to standard.
 ```
 
+## Keywords
+
+deepseek-harness · dsh-plugin · dsh · llm · model-routing · tiered-routing ·
+coding-agent · vision-model · image-generation · open-source · plugin
+
 ## License
 
 MIT
+
+---
+
+**Built and maintained by [LLM Polska](https://llmpolska.pl)** — plugins, tools and
+automations for DeepSeek Harness. [https://llmpolska.pl](https://llmpolska.pl)

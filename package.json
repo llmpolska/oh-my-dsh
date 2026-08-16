@@ -4,13 +4,17 @@
   "type": "module",
   "description": "Oh My DSH — tiered model routing for DeepSeek Harness: think/build tiers, an automatic vision tier for images, and image generation through an ordinary chat model (e.g. gpt-5.6-luna on opencode-go), all configured from an 'oh my dsh' settings tab. Works in the Web (Desktop) surface and in the terminal (TUI).",
   "keywords": [
+    "deepseek-harness",
     "dsh",
     "dsh-plugin",
-    "deepseek-harness",
     "model-routing",
     "tiered-routing",
+    "llm",
+    "coding-agent",
     "vision",
-    "image-generation"
+    "image-generation",
+    "open-source",
+    "plugin"
   ],
   "license": "MIT",
   "main": "./lib/index.js",
